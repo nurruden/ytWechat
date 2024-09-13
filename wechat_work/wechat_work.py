@@ -3,19 +3,22 @@ from typing import List
 import requests
 from requests_toolbelt import MultipartEncoder
 import datetime
-
+import time
+from utils.logger import logger
 UPLOAD_URL = 'https://qyapi.weixin.qq.com/cgi-bin/media/upload'
 SEND_URL = 'https://qyapi.weixin.qq.com/cgi-bin/message/send'
 TOKEN_URL = 'https://qyapi.weixin.qq.com/cgi-bin/gettoken'
-
+log=logger(functionName=__name__)
 
 class WechatWork:
+
     """
     企业微信消息推送
     """
 
     access_token: str = None
     access_token_expires_time: datetime.datetime = None
+
 
     def __init__(self,
                  corpid: str,
@@ -37,6 +40,8 @@ class WechatWork:
         self.appid = appid
         self.corpsecret = corpsecret
         self.access_token = self.get_access_token()
+        # self.access_token_expires_time = self.access_token_expires_time()
+
 
     def upload_file(self,
                     filepath: str,
@@ -128,6 +133,10 @@ class WechatWork:
             SEND_URL,
             params=params,
             json=data)
+        if response.json()['errmsg'] == 'ok':
+            log.info(f'send message: {content} to user: {users} success')
+        else:
+            log.error(f'发送信息: {content} 到 用户: {users} 失败')
         return response.json()['errmsg'] == 'ok'
 
     def get_access_token(self) -> str:
@@ -155,13 +164,18 @@ class WechatWork:
         }
         response = requests.get(
             TOKEN_URL, params=params)
+        print(response.json())
         js: dict = response.json()
         access_token = js.get('access_token')
         if access_token is None:
-            raise Exception('获取 token 失败 请确保相关信息填写的正确性')
+            log.error('获取 token 失败 请确保相关信息填写的正确性')
+            # raise Exception('获取 token 失败 请确保相关信息填写的正确性')
         self.access_token = access_token
         self.access_token_expires_time = datetime.datetime.now(
         ) + datetime.timedelta(seconds=js.get('expires_in') - 60)
+        log.debug(f'Got token: {self.access_token}')
+        log.info(f'Token expire time is: {self.access_token_expires_time}')
+
         return access_token
 
     def send_image(self,
