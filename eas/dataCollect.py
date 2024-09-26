@@ -7,23 +7,23 @@
 @time: 2024/9/24 15:17
 """
 from eas import EASFuc
-# import configparser
+import configparser
 from utils.logger import logger
 import json
 
 log = logger(functionName=__name__)
 
-# easConf = configparser.ConfigParser()
-# easConf.read('./conf/eas.ini')
-# #
-# appKey = easConf['basic']['appKey']
-# appSecret = easConf['basic']['appSecret']
-# url = easConf['basic']['url']
-# token = easConf['url']['token']
-# TOKEN_URL = url + token
-# reportURI = easConf['url']['reportList']
-# reportURL = url + reportURI
-# pageSize = easConf['reportConf']['pageSize']
+easConf = configparser.ConfigParser()
+easConf.read('./conf/eas.ini')
+#
+appKey = easConf['basic']['appKey']
+appSecret = easConf['basic']['appSecret']
+url = easConf['basic']['url']
+token = easConf['url']['token']
+TOKEN_URL = url + token
+reportURI = easConf['url']['reportList']
+reportURL = url + reportURI
+pageSize = easConf['reportConf']['pageSize']
 
 def get_report_data(type,token_url,url,pageSize,appKey,appSecret):
     payload = {
@@ -56,5 +56,5 @@ def get_report_data(type,token_url,url,pageSize,appKey,appSecret):
         return data_list
     else:
         return False
-# to=get_report_data("1",TOKEN_URL,reportURL,pageSize,appKey, appSecret)
-# print(to)
+to=get_report_data("1",TOKEN_URL,reportURL,pageSize,appKey, appSecret)
+print(to)

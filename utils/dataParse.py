@@ -21,4 +21,3 @@ whatIWant=[]
 #         whatIWant.append(realData[i])
 # print(len(whatIWant))
 # print(whatIWant)
-ytWechat.py

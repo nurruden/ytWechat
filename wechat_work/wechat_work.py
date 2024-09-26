@@ -3,7 +3,6 @@ from typing import List
 import requests
 from requests_toolbelt import MultipartEncoder
 import datetime
-import time
 from utils.logger import logger
 UPLOAD_URL = 'https://qyapi.weixin.qq.com/cgi-bin/media/upload'
 SEND_URL = 'https://qyapi.weixin.qq.com/cgi-bin/message/send'
@@ -136,7 +135,7 @@ class WechatWork:
         if response.json()['errmsg'] == 'ok':
             log.info(f'send message: {content} to user: {users} success')
         else:
-            log.error(f'发送信息: {content} 到 用户: {users} 失败')
+            log.error(f'发送信息: {content} 到用户: {users} 失败')
         return response.json()['errmsg'] == 'ok'
 
     def get_access_token(self) -> str:
