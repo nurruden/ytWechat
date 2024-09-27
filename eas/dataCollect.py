@@ -49,12 +49,13 @@ def get_report_data(type,token_url,url,pageSize,appKey,appSecret):
     if num != False:
         total = num
         if total > int(pageSize):
-            for i in range(1, total // int(pageSize)):
-                payload['pageNo'] = str(i + 2)
+            for i in range(1, (total // int(pageSize))+1):
+                payload['pageNo'] = str(i + 1)
+                print(payload['pageNo'])
                 data_list += fetch_data(url, payload)[0]
         log.info(f'Get data info: {data_list}')
         return data_list
     else:
         return False
-to=get_report_data("1",TOKEN_URL,reportURL,pageSize,appKey, appSecret)
-print(to)
+# to=get_report_data("1",TOKEN_URL,reportURL,pageSize,appKey, appSecret)
+# print(to)
