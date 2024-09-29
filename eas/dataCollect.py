@@ -23,7 +23,7 @@ token = easConf['url']['token']
 TOKEN_URL = url + token
 reportURI = easConf['url']['reportList']
 reportURL = url + reportURI
-pageSize = easConf['reportConf']['pageSize']
+pageSize = easConf['reportConfiguration']['pageSize']
 
 def get_report_data(type,token_url,url,pageSize,appKey,appSecret):
     payload = {
@@ -53,7 +53,7 @@ def get_report_data(type,token_url,url,pageSize,appKey,appSecret):
                 payload['pageNo'] = str(i + 1)
                 print(payload['pageNo'])
                 data_list += fetch_data(url, payload)[0]
-        log.info(f'Get data info: {data_list}')
+        # log.info(f'Get data info: {data_list}')
         return data_list
     else:
         return False

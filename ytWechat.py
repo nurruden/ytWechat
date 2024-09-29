@@ -10,9 +10,10 @@ from wechat_work import WechatWork
 import configparser
 from utils.logger import logger
 from eas import sortReportData
-log=logger(functionName=__name__)
 
-wechat=configparser.ConfigParser()
+log = logger(functionName=__name__)
+
+wechat = configparser.ConfigParser()
 wechat.read('./conf/wechat.ini')
 
 corpid = wechat['wechat']['corpid']
@@ -32,10 +33,10 @@ token = easConf['url']['token']
 TOKEN_URL = url + token
 reportURI = easConf['url']['reportList']
 reportURL = url + reportURI
-pageSize = easConf['reportConf']['pageSize']
-reportName1=easConf['reportConf']['已生产未出库']
-reportName2=easConf['reportConf']['有订单未排产']
-
+pageSize = easConf['reportConfiguration']['pageSize']
+productionReport = easConf['productionReportConf']
+saleReport = easConf['saleReportConf']
+relation = easConf['relationship']
 w = WechatWork(corpid=corpid,
                appid=appid,
                corpsecret=corpsecret)
@@ -50,8 +51,8 @@ w = WechatWork(corpid=corpid,
 
 import json
 
-with open('./conf/userData.json','r') as user:
-    users=json.load(user)
+with open('./conf/userData.json', 'r') as user:
+    users = json.load(user)
 print(users)
 '''
 {'李赏': {'wechat': 'lisa', 'id': 625}, '冉哲旭': {'wechat': 'ranranruyun', 'id': 1009}}
@@ -61,24 +62,36 @@ print(users)
 [{'单据编号': 'YDD*20240925**009183', '物料名称': '大塬_DZ300_标准_吨袋500kg', '销售员': '赵晨晖', '发货日期': '2024-09-26T00:00:00'}]
 '''
 
-def sendMessage(userInfo,dataList):
+
+def sendMessage(userInfo, dataList):
     for data in dataList:
         sales = data['销售员']
         if data['销售员'] in list(userInfo.keys()):
             print(data['销售员'])
-            materials=data['物料名称']
-            order=data['单据编号']
-            sendDate=data['发货日期']
-            userID=userInfo[data['销售员']]['wechat']
-            report=data['报表']
-            count=data['数量']
-            w.send_text(f'尊敬的同事:{sales},在{report}中，您有单据 {order}, 物料为：{materials}，数量为：{count},发货日期：{sendDate},请您及时关注',[userID])
+            materials = data['物料名称']
+            order = data['单据编号']
+            sendDate = data['发货日期']
+            userID = userInfo[data['销售员']]['wechat']
+            report = data['报表']
+            count = data['数量']
+            w.send_text(f'尊敬的同事:{sales},在{report}中，您有单据 {order}, 物料为：{materials}，数量为：{count},发货日期：{sendDate},请您及时关注',
+                        [userID])
         else:
 
             log.info(f'销售员：{sales} 不在维护列表')
 
 
-dataList=sortReportData.getReport1Data(reportName1,TOKEN_URL,reportURL,pageSize,appKey,appSecret)
-print(dataList)
+if __name__ == '__main__':
 
-# sendMessage(userInfo=users,dataList=dataList)
+    for i in list(productionReport.keys()):
+        # print(report[i]) reportValue
+        # print(relation[i]) keyValue
+        # print(i) reportName
+        res = sortReportData.getProductionReportData(productionReport[i], TOKEN_URL, reportURL, pageSize, appKey,
+                                                     appSecret, relation[i], i)
+        sendMessage(userInfo=users, dataList=res)
+
+    for j in list(saleReport.keys()):
+        res = sortReportData.getSaleReportData(saleReport[j], TOKEN_URL, reportURL, pageSize, appKey, appSecret,
+                                               relation[j], j)
+        sendMessage(userInfo=users, dataList=res)
