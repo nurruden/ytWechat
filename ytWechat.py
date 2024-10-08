@@ -10,6 +10,8 @@ from wechat_work import WechatWork
 import configparser
 from utils.logger import logger
 from eas import sortReportData
+import time
+import multiprocessing
 
 log = logger(functionName=__name__)
 
@@ -81,17 +83,34 @@ def sendMessage(userInfo, dataList):
             log.info(f'销售员：{sales} 不在维护列表')
 
 
-if __name__ == '__main__':
-
+def productionReportLoop():
     for i in list(productionReport.keys()):
-        # print(report[i]) reportValue
-        # print(relation[i]) keyValue
-        # print(i) reportName
         res = sortReportData.getProductionReportData(productionReport[i], TOKEN_URL, reportURL, pageSize, appKey,
                                                      appSecret, relation[i], i)
         sendMessage(userInfo=users, dataList=res)
 
+def saleReportLoop():
     for j in list(saleReport.keys()):
         res = sortReportData.getSaleReportData(saleReport[j], TOKEN_URL, reportURL, pageSize, appKey, appSecret,
                                                relation[j], j)
         sendMessage(userInfo=users, dataList=res)
+
+if __name__ == '__main__':
+
+    time_start = time.time()
+    process1 = multiprocessing.Process(target=productionReportLoop)
+
+    process2 = multiprocessing.Process(target=saleReportLoop)
+
+    process1.start()
+
+    process2.start()
+
+    process1.join()
+
+    process2.join()
+
+    time_end = time.time()  # 结束计时
+
+    time_c = time_end - time_start  # 运行所花时间
+    print('time cost', time_c, 's')
