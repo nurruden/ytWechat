@@ -114,3 +114,4 @@ if __name__ == '__main__':
 
     time_c = time_end - time_start  # 运行所花时间
     print('time cost', time_c, 's')
+    w.send_text("Send message success",["GaoBieKeLe",])
