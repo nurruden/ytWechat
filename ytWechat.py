@@ -12,6 +12,7 @@ from utils.logger import logger
 from eas import sortReportData
 import time
 import multiprocessing
+from collections import defaultdict
 
 log = logger(functionName=__name__)
 
@@ -65,22 +66,42 @@ print(users)
 '''
 
 
+# def sendMessage(userInfo, dataList):
+#     for data in dataList:
+#         sales = data['销售员']
+#         if data['销售员'] in list(userInfo.keys()):
+#             print(data['销售员'])
+#             materials = data['物料名称']
+#             order = data['单据编号']
+#             sendDate = data['发货日期']
+#             userID = userInfo[data['销售员']]['wechat']
+#             report = data['报表']
+#             count = data['数量']
+#             w.send_text(f'尊敬的同事:{sales},在{report}中，您有单据 {order}, 物料为：{materials}，数量为：{count},发货日期：{sendDate},请您及时关注',
+#                         [userID])
+#         else:
+#
+#             log.info(f'销售员：{sales} 不在维护列表')
+
+
 def sendMessage(userInfo, dataList):
-    for data in dataList:
-        sales = data['销售员']
-        if data['销售员'] in list(userInfo.keys()):
-            print(data['销售员'])
-            materials = data['物料名称']
-            order = data['单据编号']
-            sendDate = data['发货日期']
-            userID = userInfo[data['销售员']]['wechat']
-            report = data['报表']
-            count = data['数量']
-            w.send_text(f'尊敬的同事:{sales},在{report}中，您有单据 {order}, 物料为：{materials}，数量为：{count},发货日期：{sendDate},请您及时关注',
-                        [userID])
+    grouped_data = defaultdict(list)
+    for item in dataList:
+        # 使用销售员和报表作为键
+        key = (item['销售员'], item['报表'])
+        # 将数据添加到对应的键下
+        grouped_data[key].append(item)
+
+    for key, items in grouped_data.items():
+
+
+        if key[0] in list(userInfo.keys()):
+            result = '\n'.join(json.dumps(it, ensure_ascii=False) for it in items)
+            w.send_text(f'尊敬的同事:{key[0]},在{key[1]}中，您有{len(items)}票单据：\n {result}',
+                        [userInfo[key[0]]['wechat'], ])
         else:
 
-            log.info(f'销售员：{sales} 不在维护列表')
+            log.info(f'销售员：{key[0]} 不在维护列表')
 
 
 def productionReportLoop():
@@ -89,10 +110,12 @@ def productionReportLoop():
                                                      appSecret, relation[i], i)
         sendMessage(userInfo=users, dataList=res)
 
+
 def saleReportLoop():
     for j in list(saleReport.keys()):
         res = sortReportData.getSaleReportData(saleReport[j], TOKEN_URL, reportURL, pageSize, appKey, appSecret,
                                                relation[j], j)
+
         sendMessage(userInfo=users, dataList=res)
 
 if __name__ == '__main__':

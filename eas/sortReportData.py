@@ -73,6 +73,10 @@ def getProductionReportData(reportValue,token_url,report_url,pagesize,appkey,app
             data['数量'] = resList[i]['数量_']
             data['报表'] = reportName
             dataList.append(data)
+            #加入生产
+            pro=data.copy()
+            pro['销售员']="王家鹏"
+            dataList.append(pro)
     return dataList
 
 
