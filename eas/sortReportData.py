@@ -115,13 +115,13 @@ def getSaleReportData(reportValue,token_url,report_url,pagesize,appkey,appsecret
             dataList.append(data)
     return dataList
 
-# report=easConf['saleReportConf']
-# # print(list(report.keys()))
-# relation=easConf['relationship']
-# for i in list(report.keys()):
-#     # print(report[i]) reportValue
-#     # print(relation[i]) keyValue
-#     # print(i) reportName
-#     res=getProductionReportData(report[i],TOKEN_URL,reportURL,pageSize,appKey,appSecret,relation[i],i)
-#     print(res)
-#     print("*"*10+"+++"+"*"*10)
+report=easConf['productionReportConf']
+# print(list(report.keys()))
+relation=easConf['relationship']
+for i in list(report.keys()):
+    # print(report[i]) reportValue
+    # print(relation[i]) keyValue
+    # print(i) reportName
+    res=getProductionReportData(report[i],TOKEN_URL,reportURL,pageSize,appKey,appSecret,relation[i],i)
+    print(res)
+    print("*"*10+"+++"+"*"*10)

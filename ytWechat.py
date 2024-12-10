@@ -66,24 +66,6 @@ print(users)
 '''
 
 
-# def sendMessage(userInfo, dataList):
-#     for data in dataList:
-#         sales = data['销售员']
-#         if data['销售员'] in list(userInfo.keys()):
-#             print(data['销售员'])
-#             materials = data['物料名称']
-#             order = data['单据编号']
-#             sendDate = data['发货日期']
-#             userID = userInfo[data['销售员']]['wechat']
-#             report = data['报表']
-#             count = data['数量']
-#             w.send_text(f'尊敬的同事:{sales},在{report}中，您有单据 {order}, 物料为：{materials}，数量为：{count},发货日期：{sendDate},请您及时关注',
-#                         [userID])
-#         else:
-#
-#             log.info(f'销售员：{sales} 不在维护列表')
-
-
 def sendMessage(userInfo, dataList):
     grouped_data = defaultdict(list)
     for item in dataList:
