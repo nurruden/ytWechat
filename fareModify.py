@@ -10,8 +10,8 @@ import configparser
 from utils.logger import logger
 from eas.orderFunc import OrderManager
 from eas.getExcelData import ExcelDataProcessor
-from copy import deepcopy
 from datetime import datetime
+import pandas as pd
 
 
 # 初始化日志
@@ -37,108 +37,87 @@ fareDel = easConf['url']['fareDel']
 
 # Excel数据处理配置
 file_path = '汇总表.xlsx'
-sheet_name = '汇总表'
+sheet_name = '费用修改单'
 
 # 定义字段映射表
 dicValue = {
+    '云订单编号':'number',
     '纸袋': 'zhiDai',
     '吨袋': 'dunDai',
-    '海运费(CNY)': 'ckhyf',
-    'Pallet&Wrap/MT打托缠膜（人民币/吨）': 'bjdaTuoChanMo',
+    '海运费人民币': 'ckhyf',
+    '打托缠膜': 'bjdaTuoChanMo',
     '海运费': 'ckhyfmy',
     '出口港杂费': 'ckgzf',
-    '内陆运费总额（人民币）': 'nlyfck',
-    '摘要': 'description'
+    '内陆运费': 'nlyfck',
+    'description':'description'
 }
-valueDict = {v: k for k, v in dicValue.items()}  # 反向映射
+# valueDict = {v: k for k, v in dicValue.items()}  # 反向映射
 
-columns = [
-    '销售员', '产品包装', 'PackagingCOST/MT包装费（人民币/吨）',
-    'Pallet&Wrap/MT打托缠膜（人民币/吨）', '海运费(CNY)', '海运费',
-    '港杂费', '额外费用', '内陆运费总额（人民币）', '状态', '数量（吨）', '摘要'
-]
 
 # 初始化数据处理器
 processor = ExcelDataProcessor(file_path, sheet_name)
-result = processor.process_data(columns)
-print(result)
-order_manager = OrderManager(url)
-
-# 处理包装费用
-def process_packaging(data):
-    packaging_type = data.pop('产品包装', None)
-    quantity = data.pop('数量（吨）', 0)
-    cost_per_unit = data.pop('PackagingCOST/MT包装费（人民币/吨）', 0)
-
-    if '纸袋' in packaging_type:
-        data['纸袋'] = cost_per_unit * quantity
-    elif '吨袋' in packaging_type:
-        data['吨袋'] = cost_per_unit * quantity
-    return data
-
-# 处理费用字段
-def process_fees(data):
-    data['出口港杂费'] = data.pop('港杂费', 0) + data.pop('额外费用', 0)
-    return data
-
-# 根据状态执行对应的操作
-def handle_status(record, status, number):
-    current_time = datetime.now().strftime("%Y/%m/%d %H:%M")
-
-    if status == '新增':
-        data = {dicValue[k]: v for k, v in record.items() if v != 0}
-        des={k:v for k,v in record.items() if v !=0 }
-        print(des)
-        data['description'] = f"{current_time} || {des}"
-        print(data)
-        # log.info(f"新增记录: {data}")
-        # Uncomment to make API call
-        # response = order_manager.postOrder(fareAdd, number, **data)
-        # log.info(response)
-
-    elif status == '修改':
-        existing_data = order_manager.getOrder(pageNum=2, page=1, number=number)
-        log.info(f"现有记录: {existing_data}")
-
-        modified_data = {}
-        description = {}
-
-        for key, value in record.items():
-            if existing_data['sysnList'][0][dicValue[key]] != str(value):
-                modified_data[dicValue[key]] = value
-                description[valueDict[dicValue[key]]] = value
-
-        if '摘要' in description:
-            old_desc = description.pop('摘要')
-            description = f"{current_time} {description} || {old_desc}"
-        modified_data['description'] = description
-        log.info(f"修改记录: {modified_data}")
-        # Uncomment to make API call
-        response = order_manager.postOrder(fareModify, number, **modified_data)
-        print(response)
-
-# 主处理逻辑
-def main():
-    for record in result:
-        if '系统号' not in record:
-            continue
-
-        number = record.pop('系统号')
-        status = record.pop('状态', None)
-        record.pop('销售员', None)
-
-        record = process_packaging(record)
-        record = process_fees(record)
-        log.info(f"处理后的记录: {record}")
-
-        handle_status(record, status, number)
-
-# 执行主程序
-if __name__ == "__main__":
-    try:
-        main()
-    except Exception as e:
-        log.error(f"程序执行时发生错误: {e}")
+result = processor.process_data()
+# [{'云订单编号': 'YDD*20241024**010069', '吨袋': nan, '纸袋': nan, '打托缠膜': nan, '海运费人民币': nan, '海运费': nan, '出口港杂费': 1537.848, '内陆运费': nan, '付款对象': {'毅鑫': ['海运费', '港杂费'], '阳光': ['报关费']}}]
 
 
+# 获取当前日期
+current_date = datetime.now().strftime('%Y-%m-%d')
 
+
+def shakeData(data_list):
+    tmp=[]
+    for order in data_list:
+        cloud_order_id = order['云订单编号']
+        payment_objects = order['付款对象']
+
+        description_parts = []
+        fee_details = {}
+
+        for company, fees in payment_objects.items():
+            print(company,fees)
+            for fee in fees:
+                amount = order.get(fee, None)
+                if amount is not None and not pd.isna(amount):
+                    description_parts.append(f"{company}{fee}{amount}")
+                    fee_details[fee] = amount
+
+        if description_parts:
+            description = f"{current_date}" + ', '.join(description_parts)
+            entry = {'云订单编号': cloud_order_id, **fee_details, 'description': description}
+            tmp.append(entry)
+    return tmp
+res = shakeData(result)
+print(res)
+
+
+def sortData(shakeRes,dicValue):
+    result = []
+
+    for item in shakeRes:
+        new_item = {}
+        for key, value in item.items():
+            if key in dicValue:
+                new_key = dicValue[key]
+                new_item[new_key] = value
+            else:
+                new_item[key] = value
+        result.append(new_item)
+    return result
+finalRes=sortData(res,dicValue)
+print(finalRes)
+
+def postData(data):
+
+    order_manager = OrderManager(url)
+    for i in data:
+        # order_number=i.pop('number',None)
+        checkStatus=order_manager.getOrder(2,1,**i)
+        print(checkStatus)
+        if len(checkStatus['sysnList'])==0:
+            # 新增
+            # order_number = i.pop('number', None)
+            # res = order_manager.postOrder(fareAdd,order_number,**i)
+            print(res)
+        else:
+            pass
+postData(finalRes)

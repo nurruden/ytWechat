@@ -48,6 +48,7 @@ class OrderManager:
             response = requests.post(postURL, headers=self.headers, data=json.dumps(payload))
             if response.status_code == 200:
                 log.info("POST order successfully")
+                print(response.content)
                 log.info(json.loads(response.content))
                 return json.loads(response.content)
             else:
