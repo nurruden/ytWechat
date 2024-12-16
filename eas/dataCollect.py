@@ -13,17 +13,17 @@ import json
 
 log = logger(functionName=__name__)
 
-easConf = configparser.ConfigParser()
-easConf.read('./conf/eas.ini')
-#
-appKey = easConf['basic']['appKey']
-appSecret = easConf['basic']['appSecret']
-url = easConf['basic']['url']
-token = easConf['url']['token']
-TOKEN_URL = url + token
-reportURI = easConf['url']['reportList']
-reportURL = url + reportURI
-pageSize = easConf['reportConfiguration']['pageSize']
+# easConf = configparser.ConfigParser()
+# easConf.read('./conf/eas.ini')
+# #
+# appKey = easConf['basic']['appKey']
+# appSecret = easConf['basic']['appSecret']
+# url = easConf['basic']['url']
+# token = easConf['url']['token']
+# TOKEN_URL = url + token
+# reportURI = easConf['url']['reportList']
+# reportURL = url + reportURI
+# pageSize = easConf['reportConfiguration']['pageSize']
 
 def get_report_data(type,token_url,url,pageSize,appKey,appSecret):
     payload = {

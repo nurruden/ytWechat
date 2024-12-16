@@ -10,20 +10,29 @@ from eas import dataCollect
 import configparser
 from utils.logger import logger
 from datetime import datetime,timedelta
+import os
+
+# config_path = os.path.abspath('../conf/eas.ini')  # 将路径转换为绝对路径
+
 
 log = logger(functionName=__name__)
 
-easConf = configparser.ConfigParser()
-easConf.read('./conf/eas.ini')
+# easConf = configparser.ConfigParser()
+# easConf.read(config_path, encoding='utf-8')
+# # easConf.read('./conf/eas.ini',encoding='utf-8')
+# #
+# print(f"配置文件路径: {config_path}")
+# print(f"文件是否存在: {os.path.exists(config_path)}")
 #
-appKey = easConf['basic']['appKey']
-appSecret = easConf['basic']['appSecret']
-url = easConf['basic']['url']
-token = easConf['url']['token']
-TOKEN_URL = url + token
-reportURI = easConf['url']['reportList']
-reportURL = url + reportURI
-pageSize = easConf['reportConfiguration']['pageSize']
+#
+# appKey = easConf['basic']['appKey']
+# appSecret = easConf['basic']['appSecret']
+# url = easConf['basic']['url']
+# token = easConf['url']['token']
+# TOKEN_URL = url + token
+# reportURI = easConf['url']['reportList']
+# reportURL = url + reportURI
+# pageSize = easConf['reportConfiguration']['pageSize']
 
 
 
@@ -64,7 +73,7 @@ def getProductionReportData(reportValue,token_url,report_url,pagesize,appkey,app
         else:
             date_obj = convert_to_datetime(resList[i][keyValue])
 
-        if date_obj < datetime.now() - timedelta(days=7) and resList[i]['单据状态']=="4" and resList[i]['累计出库数量']==float(0):
+        if date_obj < datetime.now() - timedelta(days=8) and resList[i]['单据状态']=="4" and resList[i]['累计出库数量']==float(0)or resList[i]['累计出库数量'] ==None :
             data={}
             data['单据编号'] = resList[i]['单据编号']
             data['物料名称'] = resList[i]['物料名称']
@@ -115,13 +124,13 @@ def getSaleReportData(reportValue,token_url,report_url,pagesize,appkey,appsecret
             dataList.append(data)
     return dataList
 
-report=easConf['productionReportConf']
-# print(list(report.keys()))
-relation=easConf['relationship']
-for i in list(report.keys()):
-    # print(report[i]) reportValue
-    # print(relation[i]) keyValue
-    # print(i) reportName
-    res=getProductionReportData(report[i],TOKEN_URL,reportURL,pageSize,appKey,appSecret,relation[i],i)
-    print(res)
-    print("*"*10+"+++"+"*"*10)
+# report=easConf['productionReportConf']
+# # print(list(report.keys()))
+# relation=easConf['relationship']
+# for i in list(report.keys()):
+#     # print(report[i]) reportValue
+#     # print(relation[i]) keyValue
+#     # print(i) reportName
+#     res=getProductionReportData(report[i],TOKEN_URL,reportURL,pageSize,appKey,appSecret,relation[i],i)
+#     print(res)
+#     print("*"*10+"+++"+"*"*10)
