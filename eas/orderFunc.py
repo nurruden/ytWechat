@@ -23,7 +23,7 @@ class OrderManager:
         try:
             response = requests.post(url, headers=self.headers, data=json.dumps(payload))
             if response.status_code == 200:
-                log.info("Get order detail successfully")
+                log.info("获取订单详细信息：")
                 return json.loads(response.content)
             else:
                 log.error(f'Got error: {response.content}')
@@ -43,12 +43,11 @@ class OrderManager:
         }
 
         payload.update(kwargs)
-        print(json.dumps(payload))
+        # print(json.dumps(payload))
         try:
             response = requests.post(postURL, headers=self.headers, data=json.dumps(payload))
             if response.status_code == 200:
-                log.info("POST order successfully")
-                print(response.content)
+                log.info(f"成功推送订单：{number}")
                 log.info(json.loads(response.content))
                 return json.loads(response.content)
             else:
@@ -56,7 +55,7 @@ class OrderManager:
                 return False
         except requests.RequestException as e:
             log.error(f'HTTP Request failed: {e}')
-            return {"error": response.content}
+            return {"error": {e}}
 
         except Exception as e:
             log.error(f'Unexpected error: {e}')
