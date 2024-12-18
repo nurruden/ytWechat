@@ -91,16 +91,16 @@ def map_fields(data, mapping):
 
 # 提交数据函数
 def submit_data(data, url, fare_add, fare_modify):
-    global failAdd, failMod, successMod, successAdd, total, res
+    global failAdd, failMod, successMod, successAdd, total, notHandle,res
+    total = len(data)
+    successAdd = 0
+    failAdd = 0
+    successMod = 0
+    failMod = 0
+    notHandle = 0
     order_manager = OrderManager(url)
     res = {"success": [], "fail": [], "nothandle": []}
     for item in data:
-        total = len(data)
-        successAdd=0
-        failAdd=0
-        successMod=0
-        failMod=0
-        notHandle=0
         try:
             check_status = order_manager.getOrder(1, 2, **item)
             log.info(f"打印订单信息: {check_status}")
@@ -136,7 +136,8 @@ def submit_data(data, url, fare_add, fare_modify):
 
                 if not changes:
                     log.info(f"数据无变化，无需修改: {item['number']}")
-                    notHandle = notHandle+1
+                    notHandle=notHandle+1
+                    print(notHandle)
                     res['nothandle'].append(item['number'])
                     continue
 
