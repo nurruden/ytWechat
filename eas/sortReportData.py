@@ -89,40 +89,64 @@ def getProductionReportData(reportValue,token_url,report_url,pagesize,appkey,app
     return dataList
 
 
-def getSaleReportData(reportValue,token_url,report_url,pagesize,appkey,appsecret,keyValue,reportName):
-    '''
-        排产超7天未完成：
-        单据状态：4，(审核)
-        累计出库数量：0.0
-        排产日期：早于当前日期-7
+def getCloudZichanData(token_url, report_url, pagesize, appkey, appsecret, daysDelta, extra_params=None):
+    """
+    获取云端资产数据，筛选符合条件的记录。
+    """
+    # 计算开始日期
+    bizDateStart = (datetime.now() - timedelta(days=daysDelta)).strftime("%Y-%m-%d")
 
-        返回：单据编号，物料名称，'销售员': '赵晨晖','发货日期':'发货日期','数量':'数量_','报表':'有订单未排产'
+    # 默认参数
+    common_params = {
+        "status": "4",
+        "bizDateStart": bizDateStart,
+        "scmType": "2",
+    }
 
-        '''
-    resList = dataCollect.get_report_data(reportValue, token_url, report_url, pagesize, appkey, appsecret)
+    # 合并额外参数（若存在）
+    if extra_params:
+        common_params.update(extra_params)
 
-    dataList = []
-    for i in range(len(resList)):
-        if resList[i][keyValue] == None:
-            date_str = "2024-01-01T00:00:00"
-            date_format = "%Y-%m-%dT%H:%M:%S"
+    # 获取云端数据
+    resList = dataCollect.get_cloud_data(
+        token_url=token_url,
+        url=report_url,
+        pagesize=pagesize,
+        appkey=appkey,
+        appsecret=appsecret,
+        **common_params  # 传入参数
+    )
 
-            date_obj = datetime.strptime(date_str, date_format)
-        else:
-            date_obj = convert_to_datetime(resList[i][keyValue])
+    # 返回结果列表
+    dataLi = []
+
+    if not resList:
+        print("No data retrieved from cloud.")
+        return dataLi
+
+    # 遍历结果，筛选数据
+    for data in resList:
+        if data.get('是否作废') is None:
+            entry = data.get('entrys', [{}])[0]
+            dataDic = {
+                '单据编号': data.get('单据编号'),
+                '销售员': data.get('销售员'),
+                '累计出库数量': data.get('累计出库数量'),
+                '物料名称': entry.get('物料名称'),
+                '物料编码': entry.get('物料编码'),
+                '生产库存组织': data.get('库存组织'),
+                '订单日期': data.get('订单日期'),
+                '发货日期': entry.get('发货日期'),
+                '订单数量': entry.get('数量_')
+            }
+            dataLi.append(dataDic)
+    print(dataLi)
+    return dataLi
 
 
-        if date_obj < datetime.now() and resList[i]['累计出库数量'] == float(0) and resList[i]['单据状态'] == "7" or \
-                resList[i]['单据状态'] == "4":
-            data = {}
-            data['单据编号'] = resList[i]['单据编号']
-            data['物料名称'] = resList[i]['物料名称']
-            data['销售员'] = resList[i]['销售员']
-            data['发货日期'] = resList[i]['发货日期']
-            data['数量'] = resList[i]['数量_']
-            data['报表'] = reportName
-            dataList.append(data)
-    return dataList
+
+getCloudZichanData(token_url="http://139.9.135.148:8081/getToken",report_url="http://139.9.135.148:8081/httpsList",pagesize=100,appkey="921ed4d5-c918-49e4-a00c-58b72d58",appsecret="bd754be7-7768-43cc-a061-347ac223",daysDelta=60)
+
 
 # report=easConf['productionReportConf']
 # # print(list(report.keys()))
