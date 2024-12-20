@@ -97,6 +97,9 @@ def getCloudZichanData(token_url, report_url, pagesize, appkey, appsecret, daysD
     bizDateStart = (datetime.now() - timedelta(days=daysDelta)).strftime("%Y-%m-%d")
 
     # 默认参数
+    '''
+    审核状态，自产订单，daysDelta天前到现在
+    '''
     common_params = {
         "status": "4",
         "bizDateStart": bizDateStart,
@@ -121,7 +124,7 @@ def getCloudZichanData(token_url, report_url, pagesize, appkey, appsecret, daysD
     dataLi = []
 
     if not resList:
-        print("No data retrieved from cloud.")
+        log.warning("No data retrieved from cloud.")
         return dataLi
 
     # 遍历结果，筛选数据
@@ -140,12 +143,12 @@ def getCloudZichanData(token_url, report_url, pagesize, appkey, appsecret, daysD
                 '订单数量': entry.get('数量_')
             }
             dataLi.append(dataDic)
-    print(dataLi)
+    # print(dataLi)
     return dataLi
 
 
 
-getCloudZichanData(token_url="http://139.9.135.148:8081/getToken",report_url="http://139.9.135.148:8081/httpsList",pagesize=100,appkey="921ed4d5-c918-49e4-a00c-58b72d58",appsecret="bd754be7-7768-43cc-a061-347ac223",daysDelta=60)
+# getCloudZichanData(token_url="http://139.9.135.148:8081/getToken",report_url="http://139.9.135.148:8081/httpsList",pagesize=100,appkey="921ed4d5-c918-49e4-a00c-58b72d58",appsecret="bd754be7-7768-43cc-a061-347ac223",daysDelta=60)
 
 
 # report=easConf['productionReportConf']
