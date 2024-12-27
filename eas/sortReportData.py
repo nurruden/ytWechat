@@ -88,6 +88,40 @@ def getProductionReportData(reportValue,token_url,report_url,pagesize,appkey,app
             dataList.append(pro)
     return dataList
 
+def getSaleReportData(reportValue,token_url,report_url,pagesize,appkey,appsecret,keyValue,reportName):
+    '''
+        排产超7天未完成：
+        单据状态：4，(审核)
+        累计出库数量：0.0
+        排产日期：早于当前日期-7
+
+        返回：单据编号，物料名称，'销售员': '赵晨晖','发货日期':'发货日期','数量':'数量_','报表':'有订单未排产'
+
+        '''
+    resList = dataCollect.get_report_data(reportValue, token_url, report_url, pagesize, appkey, appsecret)
+
+    dataList = []
+    for i in range(len(resList)):
+        if resList[i][keyValue] == None:
+            date_str = "2024-01-01T00:00:00"
+            date_format = "%Y-%m-%dT%H:%M:%S"
+
+            date_obj = datetime.strptime(date_str, date_format)
+        else:
+            date_obj = convert_to_datetime(resList[i][keyValue])
+
+
+        if date_obj < datetime.now() and resList[i]['累计出库数量'] == float(0) and resList[i]['单据状态'] == "7" or \
+                resList[i]['单据状态'] == "4":
+            data = {}
+            data['单据编号'] = resList[i]['单据编号']
+            data['物料名称'] = resList[i]['物料名称']
+            data['销售员'] = resList[i]['销售员']
+            data['发货日期'] = resList[i]['发货日期']
+            data['数量'] = resList[i]['数量_']
+            data['报表'] = reportName
+            dataList.append(data)
+    return dataList
 
 def getCloudZichanData(token_url, report_url, pagesize, appkey, appsecret, daysDelta, extra_params=None):
     """
@@ -131,19 +165,22 @@ def getCloudZichanData(token_url, report_url, pagesize, appkey, appsecret, daysD
     for data in resList:
         if data.get('是否作废') is None:
             entry = data.get('entrys', [{}])[0]
+
             dataDic = {
                 '单据编号': data.get('单据编号'),
                 '销售员': data.get('销售员'),
-                '累计出库数量': data.get('累计出库数量'),
+                '累计出库数量': entry.get('累计出库数量'),
                 '物料名称': entry.get('物料名称'),
                 '物料编码': entry.get('物料编码'),
                 '生产库存组织': data.get('库存组织'),
                 '订单日期': data.get('订单日期'),
                 '发货日期': entry.get('发货日期'),
-                '订单数量': entry.get('数量_')
+                '订单数量': entry.get('数量_'),
+                '累计生产数量':entry.get('累计生产数量')
+
             }
             dataLi.append(dataDic)
-    # print(dataLi)
+    print(dataLi)
     return dataLi
 
 
@@ -151,13 +188,14 @@ def getCloudZichanData(token_url, report_url, pagesize, appkey, appsecret, daysD
 # getCloudZichanData(token_url="http://139.9.135.148:8081/getToken",report_url="http://139.9.135.148:8081/httpsList",pagesize=100,appkey="921ed4d5-c918-49e4-a00c-58b72d58",appsecret="bd754be7-7768-43cc-a061-347ac223",daysDelta=60)
 
 
-# report=easConf['productionReportConf']
+# report=easConf['saleReportConf']
 # # print(list(report.keys()))
 # relation=easConf['relationship']
 # for i in list(report.keys()):
 #     # print(report[i]) reportValue
 #     # print(relation[i]) keyValue
 #     # print(i) reportName
-#     res=getProductionReportData(report[i],TOKEN_URL,reportURL,pageSize,appKey,appSecret,relation[i],i)
+#     res=getSaleReportData(report[i],TOKEN_URL,reportURL,pageSize,appKey,appSecret,relation[i],i)
+#     # res=getProductionReportData(report[i],TOKEN_URL,reportURL,pageSize,appKey,appSecret,relation[i],i)
 #     print(res)
 #     print("*"*10+"+++"+"*"*10)

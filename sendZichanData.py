@@ -80,17 +80,18 @@ def request_inventory(code):
     try:
         response = requests.post(inventory_url, headers=headers, data=payload)
         response.raise_for_status()
+        print(response.json())
         return response.json()
     except requests.exceptions.RequestException as e:
         log.error(f"Inventory request failed for code {code}: {e}")
         return []
 
 # 获取云资产数据
-def get_cloud_asset_data():
+def get_cloud_zichan_data():
     return sortReportData.getCloudZichanData(token_url, report_url, pagesize=100, appkey=appKey, appsecret=appSecret, daysDelta=day_delta)
 
 # 处理云资产数据
-def process_asset_data(data):
+def process_zichan_data(data):
     res_dic = {}
     for item in data:
         code = item['物料编码']
@@ -145,24 +146,35 @@ def generate_and_send_reports(res_dic, dic_user):
 
 # 主函数
 def main():
-    start_time = datetime.datetime.now()
+    global flag
 
-    # 加载和解析用户数据
-    user_data = load_user_data()
-    dic_user = parse_user_data(user_data)
+    res=request_inventory('B0207.0024')
+    for pro in res.get('sysnList', []):
+        if pro['orgName']=='吉林远通矿业有限公司'and float(pro['quantity'])>20:
+            flag=True
+        else:
+            print(flag)
 
-    # 获取云资产数据
-    cloud_data = get_cloud_asset_data()
-
-    # 处理资产数据
-    res_dic = process_asset_data(cloud_data)
-
-    # 生成并发送报告
-    generate_and_send_reports(res_dic, dic_user)
-
-    end_time = datetime.datetime.now()
-    delta = end_time - start_time
-    log.info(f"Total execution time: {delta} seconds")
-
+    print(flag)
+#     start_time = datetime.datetime.now()
+#
+#     # 加载和解析用户数据
+#     user_data = load_user_data()
+#     dic_user = parse_user_data(user_data)
+#
+#     # 获取云资产数据
+#     cloud_data = get_cloud_zichan_data()
+#
+#     # 处理资产数据
+#     res_dic = process_zichan_data(cloud_data)
+#
+#     # 生成并发送报告
+#     generate_and_send_reports(res_dic, dic_user)
+#
+#     end_time = datetime.datetime.now()
+#     delta = end_time - start_time
+#     log.info(f"Total execution time: {delta} seconds")
+#
 if __name__ == "__main__":
     main()
+
