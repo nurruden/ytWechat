@@ -146,35 +146,35 @@ def generate_and_send_reports(res_dic, dic_user):
 
 # 主函数
 def main():
-    global flag
+    # global flag
+    #
+    # res=request_inventory('B0207.0024')
+    # for pro in res.get('sysnList', []):
+    #     if pro['orgName']=='吉林远通矿业有限公司'and float(pro['quantity'])>20:
+    #         flag=True
+    #     else:
+    #         print(flag)
+    #
+    # print(flag)
+    start_time = datetime.datetime.now()
 
-    res=request_inventory('B0207.0024')
-    for pro in res.get('sysnList', []):
-        if pro['orgName']=='吉林远通矿业有限公司'and float(pro['quantity'])>20:
-            flag=True
-        else:
-            print(flag)
+    # 加载和解析用户数据
+    user_data = load_user_data()
+    dic_user = parse_user_data(user_data)
 
-    print(flag)
-#     start_time = datetime.datetime.now()
-#
-#     # 加载和解析用户数据
-#     user_data = load_user_data()
-#     dic_user = parse_user_data(user_data)
-#
-#     # 获取云资产数据
-#     cloud_data = get_cloud_zichan_data()
-#
-#     # 处理资产数据
-#     res_dic = process_zichan_data(cloud_data)
-#
-#     # 生成并发送报告
-#     generate_and_send_reports(res_dic, dic_user)
-#
-#     end_time = datetime.datetime.now()
-#     delta = end_time - start_time
-#     log.info(f"Total execution time: {delta} seconds")
-#
+    # 获取云资产数据
+    cloud_data = get_cloud_zichan_data()
+
+    # 处理资产数据
+    res_dic = process_zichan_data(cloud_data)
+
+    # 生成并发送报告
+    generate_and_send_reports(res_dic, dic_user)
+
+    end_time = datetime.datetime.now()
+    delta = end_time - start_time
+    log.info(f"Total execution time: {delta} seconds")
+
 if __name__ == "__main__":
     main()
 
