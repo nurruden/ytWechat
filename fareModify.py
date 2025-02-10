@@ -130,7 +130,8 @@ def submit_data(data, url, fare_add, fare_modify):
                 changes = {
                     key: value
                     for key, value in item.items()
-                    if key not in ['description', 'number'] and float(value) != float(check_status['sysnList'][0].get(key))
+
+                    if key not in ['description', 'number'] and float(value) != float(check_status['sysnList'][0].get(key) or 0)
 
                 }
 
