@@ -10,10 +10,11 @@ from wechat_work import WechatWork
 import configparser
 import json
 import requests
-import datetime
+from datetime import datetime, timedelta
 from utils.logger import logger
 from eas import sortReportData
 import os
+from collections import defaultdict
 
 # 配置文件路径
 eas_path = os.path.abspath('./conf/eas.ini')
@@ -69,6 +70,9 @@ def parse_user_data(user_data):
             }
     return dic_user
 
+def parse_fac_user_data(user_data):
+    return user_data['product']
+
 # 请求库存数据
 def request_inventory(code):
     payload = json.dumps({
@@ -86,11 +90,11 @@ def request_inventory(code):
         log.error(f"Inventory request failed for code {code}: {e}")
         return []
 
-# 获取云资产数据
+# 获取云自产数据
 def get_cloud_zichan_data():
     return sortReportData.getCloudZichanData(token_url, report_url, pagesize=100, appkey=appKey, appsecret=appSecret, daysDelta=day_delta)
 
-# 处理云资产数据
+# 处理云自产数据
 def process_zichan_data(data):
     res_dic = {}
     for item in data:
@@ -144,34 +148,70 @@ def generate_and_send_reports(res_dic, dic_user):
         w.send_text(f'Hi, {sales_person} 附件是目前您的处于审核状态的自产云订单，以下仓库有库存，可以生成销售订单。', [wechat_id,])
         w.send_file(report_file, [wechat_id,leader_wechat_id])
 
+
+def sortDataToFac(data, day_delta):
+    res_dic = defaultdict(list)
+    today = datetime.now().date()  # 获取当前日期（去掉时间部分）
+
+    for item in data:
+        if not item.get('发货日期'):
+            continue  # 跳过没有 '发货日期' 的数据
+
+        dateSend = datetime.strptime(item['发货日期'], "%Y-%m-%dT%H:%M:%S").date()
+        delta = (dateSend - today).days
+
+        if -7 < delta < day_delta:
+            key = item.pop('生产库存组织', None) or '未排产'  # 直接删除并设置默认值
+            res_dic[key].append(item)
+    print(res_dic)
+
+    return res_dic
+
+def generate_and_send_reports_to_fac(data, user, save_dir="output"):
+    os.makedirs(save_dir, exist_ok=True)
+
+    for key, value in data.items():
+        filename = f"{key}.json"  # 以 key 作为文件名
+        filepath = os.path.join(save_dir, filename)
+
+        # 写入 JSON 文件
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(value, f, ensure_ascii=False, indent=4)
+        if key in user.keys():
+            w.send_text(f'Hi, 附件是目前处于审核状态的自产云订单,距离发货日期不足三天或者已经超过发货日期，但是仍未完成生产，请及时关注',
+                        user[key]['wechat'])
+            w.send_file(filepath,user[key]['wechat'])
+        else:
+            w.send_text(
+                f'Hi, 附件是目前处于审核状态的自产云订单,距离发货日期不足三天或者已经超过发货日期，但是仍未完成生产，请及时关注',
+                user[key]['wechat'])
+            w.send_file(filepath,user['未排产']['wechat'])
+
+
+
 # 主函数
 def main():
-    # global flag
-    #
-    # res=request_inventory('B0207.0024')
-    # for pro in res.get('sysnList', []):
-    #     if pro['orgName']=='吉林远通矿业有限公司'and float(pro['quantity'])>20:
-    #         flag=True
-    #     else:
-    #         print(flag)
-    #
-    # print(flag)
-    start_time = datetime.datetime.now()
+
+    start_time = datetime.now()
 
     # 加载和解析用户数据
     user_data = load_user_data()
     dic_user = parse_user_data(user_data)
+    fac_user = parse_fac_user_data(user_data)
 
-    # 获取云资产数据
+
+    # 获取云自产数据
     cloud_data = get_cloud_zichan_data()
 
-    # 处理资产数据
+    data=sortDataToFac(cloud_data,3)
+    # 处理自产数据
     res_dic = process_zichan_data(cloud_data)
-
-    # 生成并发送报告
-    generate_and_send_reports(res_dic, dic_user)
-
-    end_time = datetime.datetime.now()
+    #
+    # # 生成并发送报告
+    # generate_and_send_reports(res_dic, dic_user)
+    #
+    generate_and_send_reports_to_fac(data,fac_user)
+    end_time = datetime.now()
     delta = end_time - start_time
     log.info(f"Total execution time: {delta} seconds")
 
