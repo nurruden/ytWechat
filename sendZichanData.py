@@ -147,7 +147,7 @@ def generate_and_send_reports(res_dic, dic_user):
         log.info(f"Sending report for {sales_person}...")
         w.send_text(f'Hi, {sales_person} 附件是目前您的处于审核状态的自产云订单，以下仓库有库存，可以生成销售订单。', [wechat_id,])
         w.send_file(report_file, [wechat_id,leader_wechat_id])
-
+        os.remove(report_file)
 
 def sortDataToFac(data, day_delta):
     res_dic = defaultdict(list)
@@ -186,6 +186,7 @@ def generate_and_send_reports_to_fac(data, user, save_dir="output"):
                 f'Hi, 附件是目前处于审核状态的自产云订单,距离发货日期不足三天或者已经超过发货日期，但是仍未完成生产，请及时关注',
                 user[key]['wechat'])
             w.send_file(filepath,user['未排产']['wechat'])
+        os.remove(filepath)
 
 
 
@@ -208,9 +209,9 @@ def main():
     res_dic = process_zichan_data(cloud_data)
     #
     # # 生成并发送报告
-    # generate_and_send_reports(res_dic, dic_user)
+    generate_and_send_reports(res_dic, dic_user)
     #
-    generate_and_send_reports_to_fac(data,fac_user)
+    # generate_and_send_reports_to_fac(data,fac_user)
     end_time = datetime.now()
     delta = end_time - start_time
     log.info(f"Total execution time: {delta} seconds")
