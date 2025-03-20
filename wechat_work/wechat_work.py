@@ -172,7 +172,7 @@ class WechatWork:
         self.access_token = access_token
         self.access_token_expires_time = datetime.datetime.now(
         ) + datetime.timedelta(seconds=js.get('expires_in') - 60)
-        log.debug(f'Got token: {self.access_token}')
+        # log.debug(f'Got token: {self.access_token}')
         log.info(f'Token expire time is: {self.access_token_expires_time}')
 
         return access_token

@@ -20,7 +20,7 @@ wechat = configparser.ConfigParser()
 wechat.read('./conf/wechat.ini')
 
 corpid = wechat['wechat']['corpid']
-log.info(f'corpid is: {corpid}')
+
 appid = wechat['wechat']['appid']
 log.info(f'appid is: {appid}')
 corpsecret = wechat['wechat']['corpsecret']

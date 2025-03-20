@@ -211,7 +211,7 @@ def main():
     # # 生成并发送报告
     generate_and_send_reports(res_dic, dic_user)
     #
-    # generate_and_send_reports_to_fac(data,fac_user)
+    generate_and_send_reports_to_fac(data,fac_user)
     end_time = datetime.now()
     delta = end_time - start_time
     log.info(f"Total execution time: {delta} seconds")
